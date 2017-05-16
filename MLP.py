@@ -35,9 +35,9 @@ class BaseMLP(BaseEstimator):
 		self.verbose = verbose
 		
 		if output_layer=='softmax' and loss!='cross_entropy':
-            raise ValueError('Softmax output is only supported with cross entropy loss function.')
-        if output_layer!='softmax' and loss=='cross_entropy':
-            raise ValueError('Cross-entropy loss is only supported with softmax output layer.')
+			raise ValueError('Softmax output is only supported with cross entropy loss function.')
+		if output_layer!='softmax' and loss=='cross_entropy':
+			raise ValueError('Cross-entropy loss is only supported with softmax output layer.')
 		
 		if output_layer =='linear':
 			self.output_func = id
@@ -78,13 +78,13 @@ class BaseMLP(BaseEstimator):
 		delta_o = np.empty((self.batch_size, self.n_outs))
 		
 		#forward and backward propagation
-		for i,batch_slice in izip(xrange(self.n_iterations),cycle(batch_slices)):
+		for i,batch_slice in izip(xrange(n_iterations),cycle(batch_slices)):
 			self.forward(i,X,batch_slice,x_hidden,x_output)
 			self.backward(i,X,y,batch_slice,x_hidden,x_output,delta_o,delta_h)
 		return self
 		
 	#forward propagation
-	def forward(i,X,batch_slice,x_hidden,x_output):
+	def forward(self,i,X,batch_slice,x_hidden,x_output):
 		x_hidden[:]= np.dot(X[batch_slice],self.weights1)
 		x_hidden += self.bias1
 		np.tanh(x_hidden,x_hidden)
@@ -100,7 +100,7 @@ class BaseMLP(BaseEstimator):
 		self.forward(None, X,slice(0,n_samples),x_hidden,x_output)
 		return x_output
 	#backward propagation
-	def backward(i,X,y,batch_slice,x_hidden,x_output,delta_o,delta_h):
+	def backward(self,i,X,y,batch_slice,x_hidden,x_output,delta_o,delta_h):
 		
 		if self.loss in ['cross_entropy'] or (self.loss == 'square' and self.output_func == id):
 			delta_o[:] = y[batch_slice] - x_output
@@ -109,20 +109,20 @@ class BaseMLP(BaseEstimator):
 			delta_o[:] = 0
 			delta_o[y[batch_slice],np.ogrid[len(batch_slice)]] -=1
 			delta_o[np.argmax(x_output - np.ones((1))[y[batch_slice], np.opgrid[len(batch_slice)]],axis=1),np.ogrid[len(batch_slice)]] += 1
- 		elif self.loss == 'square' and self.output_func == _tanh:
-            delta_o[:] = (y[batch_slice] - x_output) * _dtanh(x_output)
-        else:
-            raise ValueError("Unknown combination of output function and error.")
+		elif self.loss == 'square' and self.output_func == tanh:
+			delta_o[:] = (y[batch_slice] - x_output) * dtanh(x_output)
+		else:
+			raise ValueError("Unknown combination of output function and error.")
 
 		if self.verbose > 0:
 			print(np.linalg.norm(delta_o / self.batch_size))
-		delta_h[:] = np.dot(delta_o, self.weights2_.T)
+		delta_h[:] = np.dot(delta_o, self.weights2.T)
 
         # update weights
-		self.weights2_ += self.lr / self.batch_size * np.dot(x_hidden.T, delta_o)
-		self.bias2_ += self.lr * np.mean(delta_o, axis=0)
-		self.weights1_ += self.lr / self.batch_size * np.dot(X[batch_slice].T, delta_h)
-		self.bias1_ += self.lr * np.mean(delta_h, axis=0)
+		self.weights2+= self.lr / self.batch_size * np.dot(x_hidden.T, delta_o)
+		self.bias2 += self.lr * np.mean(delta_o, axis=0)
+		self.weights1+= self.lr / self.batch_size * np.dot(X[batch_slice].T, delta_h)
+		self.bias1 += self.lr * np.mean(delta_h, axis=0)
 
 class MLPClassifier(BaseMLP, ClassifierMixin):
 	def __init__(self,n_hidden=200,lr=0.1,l2decay = 0, loss = 'cross_entropy',output_layer = 'softmax', batch_size = 100,verbose = 0):
