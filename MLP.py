@@ -35,11 +35,9 @@ class BaseMLP(BaseEstimator):
 		self.verbose = verbose
 		
 		if output_layer=='softmax' and loss!='cross_entropy':
-            raise ValueError('Softmax output is only supported '+
-                'with cross entropy loss function.')
+            raise ValueError('Softmax output is only supported with cross entropy loss function.')
         if output_layer!='softmax' and loss=='cross_entropy':
-            raise ValueError('Cross-entropy loss is only ' +
-				'supported with softmax output layer.')
+            raise ValueError('Cross-entropy loss is only supported with softmax output layer.')
 		
 		if output_layer =='linear':
 			self.output_func = id
@@ -95,6 +93,12 @@ class BaseMLP(BaseEstimator):
 		
 		self.output_func(x_output)
 	
+	def predict(self,X):
+		n_samples = X.shape[0]
+		x_hidden = np.empty((n_samples, self.n_hidden))
+		x_output = np.empty((n_samples, self.n_outs))
+		self.forward(None, X,slice(0,n_samples),x_hidden,x_output)
+		return x_output
 	#backward propagation
 	def backward(i,X,y,batch_slice,x_hidden,x_output,delta_o,delta_h):
 		
@@ -121,4 +125,26 @@ class BaseMLP(BaseEstimator):
 		self.bias1_ += self.lr * np.mean(delta_h, axis=0)
 
 class MLPClassifier(BaseMLP, ClassifierMixin):
+	def __init__(self,n_hidden=200,lr=0.1,l2decay = 0, loss = 'cross_entropy',output_layer = 'softmax', batch_size = 100,verbose = 0):
+		super(MLPClassifier,self).__init__(n_hidden,lr,l2decay,loss,output_layer,batch_size,verbose)
 	
+	def fit(self,X,y,max_epochs = 10, shuffle_data = False):
+		self.lb = LabelBinarizer()
+		one_hot_labels = self.lb.fit_transform(y)
+		super(MLPClassifier,self).fit(X,one_hot_labels,max_epochs,shuffle_data)
+		return self
+	def predict(self,X):
+		prediction = super(MLPClassifier,self).predict(X)
+		return self.lb.inverse_transform(prediction)
+
+def test_classification():
+	from sklearn.datasets import load_digits
+	digits = load_digits()
+	X,y = digits.data, digits.target
+	mlp = MLPClassifier()
+	mlp.fit(X,y)
+	training_score = mlp.score(X,y)
+	print training_score
+
+if __name__ == "__main__":
+	test_classification()
