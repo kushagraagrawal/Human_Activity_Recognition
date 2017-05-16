@@ -54,3 +54,17 @@ def getDataSubset(inputData, inputLabels, RequiredLabels):
 			subData.append(inputData[loopVar])
 			subLabels.append(inputLabels[loopVar])
 	return np.asarray(subData), np.asarray(subLabels)
+
+def createConfusionMatrix(predictedYLabels,originalYLabels,labelList):
+	confusionMatrix = np.zeros((len(labelList),len(labelList)))
+	if len(originalYLabels) != len(predictedYLabels):
+		print 'Error'
+		return
+	for i in xrange(len(originalYLabels)):
+		if(predictedYLabels[i] not in labelList) or (originalYLabels[i] not in labelList):
+			print "Error"
+			return
+		else:
+			confusionMatrix[labelList.index(originalYLabels[i]),labelList.index(predictedYLabels[i])] = confusionMatrix[labelList.index(originalYLabels[i]),labelList.index(predictedYLabels[i])] + 1
+	return confusionMatrix
+			
