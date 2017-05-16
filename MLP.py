@@ -68,5 +68,29 @@ class BaseMLP(BaseEstimator):
 			X, y = shuffle(X,y)
 		batch_slices = list(gen_even_slices(n_batches * self.batch_size, n_batches))
 		
+		#weights and bias
+		self.weights1 = np.random.uniform(size = (n_features,self.n_hidden))/np.sqrt(n_features)
+		self.bias1 = np.zeros(self.n_hidden)
+		self.weights2 = np.random.uniform(size = (self.n_hidden,self.n_outs))/np.sqrt(self.n_hidden)
+		self.bias2 = np.zeros(self.n_outs)
+		# empty datasets for hidden and output layer
+		x_hidden = np.empty((self.batch_size, self.n_hidden))
+		delta_h = np.empty((self.batch_size, self.n_hidden))
+		x_output = np.empty((self.batch_size, self.n_outs))
+		delta_o = np.empty((self.batch_size, self.n_outs))
 		
-		self
+		#forward and backward propagation
+		for i,batch_slice in izip(xrange(self.n_iterations),cycle(batch_slices)):
+			self.forward(i,X,batch_slice,x_hidden,x_output)
+			self.backward(i,X,y,batch_slice,x_hidden,x_output,delta_o,delta_h)
+		return self
+		
+	def forward(i,X,batch_slice,x_hidden,x_output):
+		x_hidden[:]= np.dot(X[batch_slice],self.weights1)
+		x_hidden += self.bias1
+		np.tanh(x_hidden,x_hidden)
+		x_output[:] = np.dot(x_hidden,self.weights2)
+		x_output += self.bias2
+		
+		self.output_func(x_output)
+		
