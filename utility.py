@@ -21,7 +21,7 @@ def parseFile(filename):
 	
 def checkAccuracy(original,predicted,labels):
 	TP = defaultdict(list)
-	FP = dafaultdict(list)
+	FP = defaultdict(list)
 	FN = defaultdict(list)
 	
 	precision = []
