@@ -85,6 +85,7 @@ class BaseMLP(BaseEstimator):
 			self.backward(i,X,y,batch_slice,x_hidden,x_output,delta_o,delta_h)
 		return self
 		
+	#forward propagation
 	def forward(i,X,batch_slice,x_hidden,x_output):
 		x_hidden[:]= np.dot(X[batch_slice],self.weights1)
 		x_hidden += self.bias1
@@ -93,4 +94,31 @@ class BaseMLP(BaseEstimator):
 		x_output += self.bias2
 		
 		self.output_func(x_output)
+	
+	#backward propagation
+	def backward(i,X,y,batch_slice,x_hidden,x_output,delta_o,delta_h):
 		
+		if self.loss in ['cross_entropy'] or (self.loss == 'square' and self.output_func == id):
+			delta_o[:] = y[batch_slice] - x_output
+		elif self.loss == 'crammer_singer':
+			raise ValueError("not implemented yet")
+			delta_o[:] = 0
+			delta_o[y[batch_slice],np.ogrid[len(batch_slice)]] -=1
+			delta_o[np.argmax(x_output - np.ones((1))[y[batch_slice], np.opgrid[len(batch_slice)]],axis=1),np.ogrid[len(batch_slice)]] += 1
+ 		elif self.loss == 'square' and self.output_func == _tanh:
+            delta_o[:] = (y[batch_slice] - x_output) * _dtanh(x_output)
+        else:
+            raise ValueError("Unknown combination of output function and error.")
+
+		if self.verbose > 0:
+			print(np.linalg.norm(delta_o / self.batch_size))
+		delta_h[:] = np.dot(delta_o, self.weights2_.T)
+
+        # update weights
+		self.weights2_ += self.lr / self.batch_size * np.dot(x_hidden.T, delta_o)
+		self.bias2_ += self.lr * np.mean(delta_o, axis=0)
+		self.weights1_ += self.lr / self.batch_size * np.dot(X[batch_slice].T, delta_h)
+		self.bias1_ += self.lr * np.mean(delta_h, axis=0)
+
+class MLPClassifier(BaseMLP, ClassifierMixin):
+	
