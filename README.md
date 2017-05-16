@@ -9,3 +9,7 @@
 ### Observations
 
 <p> classifying with 95-96% accuracy. since 561 feature vectors. Use PCA? </p>
+
+## Random Forest
+
+<p> Using Random Forest. </p>
